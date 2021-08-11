@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Mongo Database</title>
+    <style>
+        form{
+            padding: 20px;
+            border: 2px solid rgb(57, 6, 197);
+            background-color: rgb(27, 77, 133);
+            width: 200px;
+            border-radius: 5px;
+        }
+        form input{
+            padding: 10px 20px;
+            border:none;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        form button{
+            padding: 10px 20px;
+            border-radius: 5px;
+
+        }
+        #ourProducts{
+            border: 1px solid red;
+            color:rgb(57, 6, 197);
+            width: 300px;
+            padding: 30px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <h1>MongoDB</h1>
+    <form action='/addProduct' id="myForm"   method="POST">
+        <input type="text" name="name" placeholder="name" ><br>
+        <input type="text" name="price" placeholder="price" ><br>
+        <input type="text" name="quantity" placeholder="quantity" ><br>
+        <button   type="submit">Add Product</button>
+    </form>
+    <div id='allProducts'>
+        
+    </div>
+    <div id="update">
+
+    </div>
+    <script>
+        //  document.getElementById('myForm').addEventListener('submit', function(event){
+        //     event.preventDefault()
+        //     console.log('clicked')
+        // })
+        function loadAllProduct () {
+            fetch('/products')
+        .then(res => res.json())
+        .then(product => {
+            console.log(product)
+            const container = document.getElementById('allProducts')
+            container.innerHTML = '';
+            product.forEach(pd =>{
+                
+                const p = document.createElement('div');
+            
+               p.innerHTML= `
+                <h3 class="productName">Name: ${pd.name}</h3>
+                <h2>Price: ${pd.price}</h2>
+                <button onclick="loadProduct('${pd._id}')">Update</button>
+                <button onclick="deleteProduct(event,'${pd._id}')">delete</button>
+               `             
+                container.appendChild(p);  
+            })            
+        }) 
+        }
+        loadAllProduct()
+
+        function deleteProduct(event, id){
+            fetch(`/delete/${id}`, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result) {
+                    event.target.parentNode.style.display = 'none';
+                }
+            })
+        }
+
+        function loadProduct (id) {
+            fetch(`product/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                const update = document.getElementById('update') 
+                update.innerHTML = `
+                    <h3>Update: ${data._id}</h3>
+                    <br>
+                    <input type="text" value="${data.price}" id="price"/>
+                    <br>
+                    <input type="text" value="${data.quantity}"  id="quantity"/>
+                    <br>
+                    <button onclick="updateProduct('${data._id}')">Submit</button>
+                `
+            })
+        }
+
+        function updateProduct (id) {
+            const price = document.getElementById("price").value
+            const quantity = document.getElementById("quantity").value
+            const product = {id, price, quantity}
+            fetch(`/update/${id}`,{
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(product)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result) {
+                    loadAllProduct();
+                }
+            })
+        }
+    </script>   
+</body>
+</html>
